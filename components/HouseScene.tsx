@@ -224,7 +224,7 @@ function Scene({ progressMV, pointer, reduced }: { progressMV: MotionValue<numbe
       spin.current.rotation.x = THREE.MathUtils.damp(spin.current.rotation.x, pointer.current.y * 0.04, 3, dt)
       spin.current.position.x = window.innerWidth < 820 ? 0 : (1 - p) * 1.8
     }
-    if (shadow.current) shadow.current.visible = progress.current > 0.55
+    if (shadow.current) shadow.current.visible = progress.current > 0.74
   })
 
   return (
