@@ -48,7 +48,7 @@ function Part({ geometry, position, rotation = [0, 0, 0], color, order, explode,
     if (group.current) {
       const k = 1 - assemble
       group.current.position.set(position[0] + explode[0] * k, position[1] + explode[1] * k, position[2] + explode[2] * k)
-      group.current.rotation.set(rotation[0], rotation[1] + 0.25 * k * (order - 0.5), rotation[2])
+      group.current.rotation.set(0, 0.25 * k * (order - 0.5), 0)
     }
     if (mat.current) {
       mat.current.opacity = solid
@@ -141,6 +141,47 @@ function Dimension({ from, to, label, progress, offset }: { from: [number, numbe
   )
 }
 
+/** Yard sign face with the studio name, fades in with the finished materials. */
+function SignFace({ progress, order, position }: { progress: React.MutableRefObject<number>; order: number; position: [number, number, number] }) {
+  const mat = useRef<THREE.MeshBasicMaterial>(null)
+  const tex = useMemo(() => {
+    const c = document.createElement('canvas')
+    c.width = 512
+    c.height = 320
+    const g = c.getContext('2d')!
+    g.fillStyle = '#f3efe7'
+    g.fillRect(0, 0, 512, 320)
+    g.strokeStyle = '#1c1b19'
+    g.lineWidth = 10
+    g.strokeRect(14, 14, 484, 292)
+    g.lineWidth = 9
+    g.beginPath()
+    g.moveTo(200, 140); g.lineTo(256, 92); g.lineTo(312, 140); g.lineTo(312, 170); g.lineTo(200, 170); g.closePath()
+    g.stroke()
+    g.fillStyle = '#1c1b19'
+    g.font = '600 58px Georgia, serif'
+    g.textAlign = 'center'
+    g.fillText('Halden Row', 256, 236)
+    g.fillStyle = '#a67c3d'
+    g.font = '500 26px system-ui, sans-serif'
+    g.fillText('DESIGN · BUILD', 256, 276)
+    const t = new THREE.CanvasTexture(c)
+    t.colorSpace = THREE.SRGBColorSpace
+    t.anisotropy = 4
+    return t
+  }, [])
+  useFrame(() => {
+    const solid = ease((progress.current - 0.62 - order * 0.18) / 0.2)
+    if (mat.current) mat.current.opacity = solid
+  })
+  return (
+    <mesh position={position}>
+      <planeGeometry args={[0.92, 0.575]} />
+      <meshBasicMaterial ref={mat} map={tex} transparent opacity={0} toneMapped={false} />
+    </mesh>
+  )
+}
+
 function House({ progress, intro }: { progress: React.MutableRefObject<number>; intro: React.MutableRefObject<number> }) {
   const g = useMemo(() => ({
     ground: box(11, 0.24, 7.5),
@@ -158,6 +199,51 @@ function House({ progress, intro }: { progress: React.MutableRefObject<number>; 
     trunk: new THREE.CylinderGeometry(0.07, 0.1, 1.6, 8),
     canopy: new THREE.IcosahedronGeometry(0.95, 0),
     planter: box(2.4, 0.5, 0.6),
+    // detail parts
+    mullion: box(0.06, 2.15, 0.12),
+    frameH: box(3.2, 0.07, 0.12),
+    upMullion: box(0.06, 1.7, 0.12),
+    upFrameH: box(1.6, 0.07, 0.12),
+    sill: box(1.8, 0.07, 0.3),
+    rearMullion: box(0.12, 1.9, 0.06),
+    rearFrameH: box(0.12, 0.07, 2.5),
+    handle: box(0.04, 0.9, 0.06),
+    sconce: box(0.16, 0.34, 0.12),
+    plate: box(0.3, 0.16, 0.03),
+    groove: box(5.42, 0.02, 0.02),
+    grooveSide: box(0.02, 0.02, 3.82),
+    board: box(0.03, 2.5, 0.02),
+    seam: box(3.32, 0.06, 0.06),
+    gutter: box(0.14, 0.12, 4.3),
+    downspout: new THREE.CylinderGeometry(0.05, 0.05, 5.4, 8),
+    cap: box(0.75, 0.08, 0.75),
+    flue: new THREE.CylinderGeometry(0.08, 0.08, 0.35, 10),
+    railGlass: box(0.92, 0.75, 0.03),
+    railGlassSide: box(0.03, 0.75, 3.0),
+    railTop: box(0.96, 0.04, 0.06),
+    chair: box(0.5, 0.42, 0.5),
+    chairBack: box(0.5, 0.5, 0.08),
+    potLarge: new THREE.CylinderGeometry(0.22, 0.17, 0.42, 14),
+    shrub: new THREE.IcosahedronGeometry(0.34, 1),
+    shrubSmall: new THREE.IcosahedronGeometry(0.22, 1),
+    lawn: box(4.6, 0.05, 1.2),
+    sidewalk: box(11, 0.07, 0.8),
+    curb: box(11, 0.14, 0.12),
+    hedge: box(2.1, 0.55, 0.42),
+    fencePost: box(0.08, 0.9, 0.08),
+    fenceBoard: box(0.04, 0.12, 3.6),
+    cone: new THREE.ConeGeometry(0.75, 2.6, 8),
+    coneTop: new THREE.ConeGeometry(0.5, 1.5, 8),
+    trunkThin: new THREE.CylinderGeometry(0.06, 0.08, 0.7, 8),
+    canopy2: new THREE.IcosahedronGeometry(0.6, 1),
+    lampPole: new THREE.CylinderGeometry(0.045, 0.06, 2.8, 10),
+    lampHead: box(0.22, 0.32, 0.22),
+    bin: box(0.5, 0.82, 0.5),
+    binLid: box(0.54, 0.06, 0.56),
+    signPost: box(0.06, 1.05, 0.06),
+    signBoard: box(1.0, 0.65, 0.04),
+    acUnit: box(0.7, 0.6, 0.45),
+    acGrille: new THREE.CylinderGeometry(0.2, 0.2, 0.02, 18),
   }), [])
 
   const P = { progress, intro }
@@ -182,8 +268,103 @@ function House({ progress, intro }: { progress: React.MutableRefObject<number>; 
         <Part key={i} {...P} geometry={g.step} position={[1.05, 0.08 + i * 0.16, 2.95 - i * 0.32]} color="#d9d2c5" order={0.82 + i * 0.02} explode={[0.4, -0.4, 2]} />
       ))}
       <Part {...P} geometry={g.planter} position={[-1.8, 0.25, 3.0]} color="#d9d2c5" order={0.86} explode={[-1.4, -0.4, 1.6]} />
-      <Part {...P} geometry={g.trunk} position={[-3.9, 0.8, 2.4]} color="#5d4a36" order={0.9} explode={[1.4, 0.4, 3.2]} />
-      <Part {...P} geometry={g.canopy} position={[-3.9, 2.1, 2.4]} color="#7f8c69" roughness={0.95} order={0.94} explode={[1.6, 1.2, 3.4]} />
+      <Part {...P} geometry={g.trunk} position={[-4.3, 0.8, 2.0]} color="#5d4a36" order={0.9} explode={[1.4, 0.4, 3.2]} />
+      <Part {...P} geometry={g.canopy} position={[-4.3, 2.1, 2.0]} color="#7f8c69" roughness={0.95} order={0.94} explode={[1.6, 1.2, 3.4]} />
+
+      {/* window frames */}
+      {[-2.5, -1.45, -0.45, 0.6].map((x, i) => (
+        <Part key={`m${i}`} {...P} geometry={g.mullion} position={[x, 1.2, 2.16]} color="#1f2124" roughness={0.4} metalness={0.4} order={0.24} explode={[-1.2, 0.2, 2.9]} shadow={false} />
+      ))}
+      {[0.12, 2.28].map((y, i) => (
+        <Part key={`f${i}`} {...P} geometry={g.frameH} position={[-0.95, y, 2.16]} color="#1f2124" roughness={0.4} metalness={0.4} order={0.24} explode={[-1.2, 0.2, 2.9]} shadow={false} />
+      ))}
+      {[0.82, 1.55, 2.28].map((x, i) => (
+        <Part key={`um${i}`} {...P} geometry={g.upMullion} position={[x, 4.2, 2.23]} color="#c9a46b" roughness={0.4} metalness={0.5} order={0.63} explode={[1.8, 1.8, 2.9]} shadow={false} />
+      ))}
+      {[3.36, 5.04].map((y, i) => (
+        <Part key={`uf${i}`} {...P} geometry={g.upFrameH} position={[1.55, y, 2.23]} color="#c9a46b" roughness={0.4} metalness={0.5} order={0.63} explode={[1.8, 1.8, 2.9]} shadow={false} />
+      ))}
+      <Part {...P} geometry={g.sill} position={[1.55, 3.3, 2.28]} color="#c9a46b" roughness={0.4} metalness={0.5} order={0.64} explode={[1.8, 1.6, 2.9]} />
+      {[-0.9, 0.1].map((z, i) => (
+        <Part key={`rm${i}`} {...P} geometry={g.rearMullion} position={[4.0, 1.25, z]} color="#1f2124" roughness={0.4} metalness={0.4} order={0.37} explode={[3.1, 0, -0.4]} shadow={false} />
+      ))}
+      {[0.3, 2.2].map((y, i) => (
+        <Part key={`rf${i}`} {...P} geometry={g.rearFrameH} position={[4.0, y, -0.5]} color="#1f2124" roughness={0.4} metalness={0.4} order={0.37} explode={[3.1, 0, -0.4]} shadow={false} />
+      ))}
+
+      {/* door hardware, number, sconces, mailbox */}
+      <Part {...P} geometry={g.handle} position={[0.7, 1.25, 2.2]} color="#c9a46b" roughness={0.3} metalness={0.8} order={0.28} explode={[0.6, -0.4, 2.8]} shadow={false} />
+      <Part {...P} geometry={g.sconce} position={[0.78, 2.52, 2.16]} color="#1f2124" emissive="#ffcf86" emissiveIntensity={1.4} order={0.3} explode={[0.6, 0.4, 2.6]} shadow={false} />
+      <Part {...P} geometry={g.plate} position={[1.3, 2.52, 2.12]} color="#c9a46b" roughness={0.3} metalness={0.8} order={0.3} explode={[0.6, 0.6, 2.6]} shadow={false} />
+
+      {/* upper cladding grooves and rear timber boards */}
+      {Array.from({ length: 8 }, (_, i) => (
+        <Part key={`gr${i}`} {...P} geometry={g.groove} position={[0.3, 2.95 + i * 0.32, 2.15]} color="#3b3a36" order={0.5} explode={[0.8, 1.8, 1.4]} shadow={false} />
+      ))}
+      {Array.from({ length: 8 }, (_, i) => (
+        <Part key={`gs${i}`} {...P} geometry={g.grooveSide} position={[3.01, 2.95 + i * 0.32, 0.25]} color="#3b3a36" order={0.5} explode={[0.4, 1.8, 1.2]} shadow={false} />
+      ))}
+      {Array.from({ length: 11 }, (_, i) => (
+        <Part key={`rb${i}`} {...P} geometry={g.board} position={[1.7 + i * 0.2, 1.25, 1.11]} color="#7f5e3f" order={0.33} explode={[2.6, -0.8, -0.6]} shadow={false} />
+      ))}
+
+      {/* roof seams, gutters, downspout, chimney cap */}
+      {Array.from({ length: 9 }, (_, i) => i).flatMap((i) => [-1, 1].map((side) => (
+        <Part key={`se${i}${side}`} {...P} geometry={g.seam} position={[0.3 + side * 1.44, 5.5 + 0.86, 0.25 - 1.85 + i * 0.46]} rotation={[0, 0, side * -0.5245]} color="#5e5b55" roughness={0.5} metalness={0.4} order={0.74} explode={[0.2, 2.4, -0.6]} shadow={false} />
+      )))}
+      {[-1, 1].map((side) => (
+        <Part key={`gu${side}`} {...P} geometry={g.gutter} position={[0.3 + side * 2.88, 5.48, 0.25]} color="#2a2927" roughness={0.4} metalness={0.5} order={0.76} explode={[side * 1.4, 2.0, -0.4]} shadow={false} />
+      ))}
+      <Part {...P} geometry={g.downspout} position={[3.12, 2.78, 2.0]} color="#2a2927" roughness={0.4} metalness={0.5} order={0.77} explode={[1.6, 1.0, 0.8]} />
+      <Part {...P} geometry={g.cap} position={[1.6, 6.99, -0.8]} color="#1f2124" order={0.79} explode={[1.2, 3.0, -0.8]} />
+      {[-0.12, 0.12].map((x, i) => (
+        <Part key={`fl${i}`} {...P} geometry={g.flue} position={[1.6 + x, 7.2, -0.8]} color="#6b6862" metalness={0.6} roughness={0.4} order={0.8} explode={[1.2, 3.3, -0.8]} shadow={false} />
+      ))}
+
+      {/* rear terrace with glass rail, chair and planter */}
+      <Part {...P} geometry={g.railGlass} position={[3.46, 2.88, 1.08]} color="#9fb7c2" roughness={0.05} metalness={0.3} order={0.4} explode={[2.8, 1.2, 1.2]} shadow={false} />
+      <Part {...P} geometry={g.railGlassSide} position={[3.92, 2.88, -0.4]} color="#9fb7c2" roughness={0.05} metalness={0.3} order={0.4} explode={[3.2, 1.2, 0]} shadow={false} />
+      <Part {...P} geometry={g.railTop} position={[3.46, 3.27, 1.08]} color="#c9a46b" metalness={0.6} roughness={0.4} order={0.41} explode={[2.8, 1.4, 1.2]} shadow={false} />
+      <Part {...P} geometry={g.chair} position={[3.5, 2.71, 0.25]} color="#b08458" order={0.42} explode={[3.0, 1.6, 0.6]} />
+      <Part {...P} geometry={g.chairBack} position={[3.5, 3.13, 0.0]} rotation={[-0.2, 0, 0]} color="#b08458" order={0.42} explode={[3.0, 1.6, 0.6]} />
+      <Part {...P} geometry={g.potLarge} position={[3.5, 2.71, -1.3]} color="#d9d2c5" order={0.43} explode={[2.4, 1.6, 0.8]} />
+      <Part {...P} geometry={g.shrub} position={[3.5, 3.12, -1.3]} color="#6f8b57" roughness={0.95} order={0.44} explode={[2.4, 2.0, 0.8]} />
+      <Part {...P} geometry={g.acUnit} position={[3.3, 0.3, -2.45]} color="#b9b6ae" roughness={0.6} metalness={0.2} order={0.45} explode={[2.4, -0.4, -1.6]} />
+      <Part {...P} geometry={g.acGrille} position={[3.3, 0.61, -2.45]} color="#3b3a36" order={0.46} explode={[2.4, -0.2, -1.6]} shadow={false} />
+
+      {/* front garden, path, sidewalk */}
+      <Part {...P} geometry={g.lawn} position={[-2.75, 0.025, 2.75]} color="#86a06b" roughness={1} order={0.05} explode={[-1, -0.5, 1]} shadow={false} />
+      <Part {...P} geometry={g.sidewalk} position={[0.4, 0.035, 3.75]} color="#cfc8ba" roughness={0.95} order={0.04} explode={[0, -0.5, 1.4]} shadow={false} />
+      <Part {...P} geometry={g.curb} position={[0.4, 0.07, 4.1]} color="#b9b2a4" order={0.04} explode={[0, -0.5, 1.6]} shadow={false} />
+      {[-2.4, -1.8, -1.2].map((x, i) => (
+        <Part key={`ps${i}`} {...P} geometry={g.shrubSmall} position={[x, 0.66, 3.0]} color={i === 1 ? '#8a9a5b' : '#5f7a4b'} roughness={0.95} order={0.88} explode={[-1.4, 0.4, 1.8]} />
+      ))}
+      <Part {...P} geometry={g.hedge} position={[3.6, 0.3, 3.1]} color="#5f7a4b" roughness={0.95} order={0.87} explode={[1.6, -0.2, 1.6]} />
+      <Part {...P} geometry={g.hedge} position={[-4.1, 0.3, 0.6]} rotation={[0, Math.PI / 2, 0]} color="#5f7a4b" roughness={0.95} order={0.87} explode={[-1.6, -0.2, 0.8]} />
+
+      {/* side fence */}
+      {[-2.0, -0.8, 0.4, 1.6].map((z, i) => (
+        <Part key={`fp${i}`} {...P} geometry={g.fencePost} position={[5.4, 0.45, z]} color="#8a6a49" order={0.9} explode={[1.4, -0.2, -0.4]} />
+      ))}
+      {[0.25, 0.45, 0.65, 0.85].map((y, i) => (
+        <Part key={`fb${i}`} {...P} geometry={g.fenceBoard} position={[5.4, y, -0.2]} color="#b08458" order={0.91} explode={[1.6, -0.2, -0.4]} shadow={false} />
+      ))}
+
+      {/* rear conifer, small tree, street lamp, bins, sign */}
+      <Part {...P} geometry={g.trunkThin} position={[-3.2, 0.35, -2.4]} color="#5d4a36" order={0.9} explode={[-1.4, 0.2, -1.6]} />
+      <Part {...P} geometry={g.cone} position={[-3.2, 1.9, -2.4]} color="#4f6b45" roughness={0.95} order={0.92} explode={[-1.4, 1.2, -1.6]} />
+      <Part {...P} geometry={g.coneTop} position={[-3.2, 3.3, -2.4]} color="#5a7a4e" roughness={0.95} order={0.93} explode={[-1.4, 1.8, -1.6]} />
+      <Part {...P} geometry={g.trunkThin} position={[4.9, 0.35, 2.1]} color="#5d4a36" order={0.9} explode={[1.4, 0.2, 2]} />
+      <Part {...P} geometry={g.canopy2} position={[4.9, 1.15, 2.1]} color="#93a56e" roughness={0.95} order={0.94} explode={[1.4, 1.0, 2]} />
+      <Part {...P} geometry={g.lampPole} position={[-5.0, 1.4, 3.85]} color="#2a2927" metalness={0.5} roughness={0.4} order={0.95} explode={[-1.2, 1.0, 1.8]} />
+      <Part {...P} geometry={g.lampHead} position={[-5.0, 2.9, 3.85]} color="#2a2927" emissive="#ffcf86" emissiveIntensity={1.6} order={0.96} explode={[-1.2, 1.6, 1.8]} />
+      <Part {...P} geometry={g.bin} position={[2.75, 0.41, 2.6]} color="#2f6b45" roughness={0.6} order={0.96} explode={[1.2, 0.4, 1.8]} />
+      <Part {...P} geometry={g.binLid} position={[2.75, 0.85, 2.6]} color="#24553a" roughness={0.6} order={0.96} explode={[1.2, 0.6, 1.8]} />
+      <Part {...P} geometry={g.bin} position={[3.35, 0.41, 2.6]} color="#2c5d8f" roughness={0.6} order={0.97} explode={[1.6, 0.4, 1.8]} />
+      <Part {...P} geometry={g.binLid} position={[3.35, 0.85, 2.6]} color="#234b74" roughness={0.6} order={0.97} explode={[1.6, 0.6, 1.8]} />
+      <Part {...P} geometry={g.signPost} position={[-3.45, 0.52, 3.05]} color="#e9e3d8" order={0.98} explode={[-1, 0.4, 1.4]} />
+      <Part {...P} geometry={g.signBoard} position={[-3.45, 0.95, 3.1]} color="#e9e3d8" order={0.98} explode={[-1, 0.8, 1.4]} />
+      <SignFace progress={progress} order={0.98} position={[-3.45, 0.95, 3.125]} />
 
       <Dimension from={[-2.8, 0.02, 3.6]} to={[1.6, 0.02, 3.6]} label="4.40 m" progress={progress} offset={0.04} />
       <Dimension from={[-3.4, 0, 2.1]} to={[-3.4, 5.5, 2.1]} label="5.50 m" progress={progress} offset={0.08} />

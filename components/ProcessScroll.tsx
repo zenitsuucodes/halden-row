@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 import { Dimension } from './icons'
 import { process } from '@/lib/data'
+import { stepDrawings } from './Drawings'
 
 /** Vertical scroll drives a horizontal track of process steps. */
 export function ProcessScroll() {
@@ -33,15 +34,19 @@ export function ProcessScroll() {
             <h2 id="process-title" className="serif h-1" style={{ margin: '18px 0 20px' }}>Five steps. <em className="it">No surprises.</em></h2>
             <p className="lede">Every Halden Row project follows the same path, so you always know what happens next and what it costs.</p>
           </div>
-          {process.map((s) => (
+          {process.map((s, i) => {
+            const D = stepDrawings[i]
+            return (
             <article key={s.n} className="step-card">
               <span className="time">{s.time}</span>
+              <div className="step-drawing"><D /></div>
               <h3 className="serif">{s.title}</h3>
               <p>{s.text}</p>
               <Dimension label={`STEP ${s.n}`} width={220} />
               <span className="n" aria-hidden="true">{s.n}</span>
             </article>
-          ))}
+            )
+          })}
         </motion.div>
         <div className="wrap" style={{ marginTop: 40 }}>
           <div style={{ height: 1, background: 'var(--line)', position: 'relative' }}>

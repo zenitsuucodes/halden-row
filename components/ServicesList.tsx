@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { AnimatePresence, motion, useMotionValue, useSpring } from 'framer-motion'
 import { useState } from 'react'
 import { services } from '@/lib/data'
+import { serviceDrawings } from './Drawings'
 
 /** Service rows; on desktop a photo follows the cursor over the hovered row. */
 export function ServicesList() {
@@ -35,6 +36,7 @@ export function ServicesList() {
         >
           <span className="n">{String(i + 1).padStart(2, '0')}</span>
           <Link href={`/services#${s.key}`}><h3 className="serif">{s.title}</h3></Link>
+          <div className="service-drawing">{(() => { const D = serviceDrawings[s.key]; return D ? <D /> : null })()}</div>
           <p>{s.line} {s.detail}</p>
           <span className="from">{s.from}</span>
         </motion.div>
